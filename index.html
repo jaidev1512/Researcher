@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gyan - AI Research Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00ff9d;
+            --secondary-color: #00b8ff;
+            --background-color: #0a0a0a;
+            --chat-bg: #1a1a1a;
+            --text-color: #00ff9d;
+            --border-color: #333;
+            --user-message-bg: #002b36;
+            --bot-message-bg: #1a1a1a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid var(--primary-color);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            border-bottom: 1px solid var(--primary-color);
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: transparent;
+            border: none;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            min-height: 200px;
+        }
+
+        .chat-input-container {
+            padding: 1.5rem;
+            border-top: 1px solid var(--primary-color);
+            background: rgba(10, 10, 10, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Gyan</h1>
+            <p>Advanced Research Interface</p>
+        </header>
+        
+        <main class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    > SYSTEM INITIALIZED_
+                    Welcome to Gyan v2.0. I'm your advanced research companion. How may I assist with your research today?
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <form class="chat-input-form" id="chatForm">
+                    <input 
+                        type="text" 
+                        class="chat-input" 
+                        id="userInput" 
+                        placeholder="> Enter your research query_"
+                        autocomplete="off"
+                    >
+                    <button type="submit" class="send-button" id="sendButton">
+                        Execute
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById("chatForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+    
+            let userInput = document.getElementById("userInput").value.trim();
+            if (!userInput) return; // Prevent empty submissions
+    
+            addMessage(userInput, "user");
+            document.getElementById("userInput").value = ""; // Clear input field
+    
+            try {
+                let response = await fetch("http://127.0.0.1:5000/api/chatbot", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userInput })
+                });
+    
+                let data = await response.json();
+                let botReply = data.response || "Error: No response from server.";
+    
+                addMessage(botReply, "bot");
+            } catch (error) {
+                addMessage("Error communicating with the AI.", "bot");
+                console.error("API Error:", error);
+            }
+        });
+    
+        function addMessage(text, sender) {
+            let chatMessages = document.getElementById("chatMessages");
+            let messageDiv = document.createElement("div");
+            messageDiv.className = sender === "bot" ? "bot-message" : "user-message";
+            messageDiv.textContent = sender === "bot" ? `> ${text}` : text;
+            chatMessages.appendChild(messageDiv);
+    
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll
+        }
+    </script>
+    
+</body>
+</html>
